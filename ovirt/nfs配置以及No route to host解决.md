@@ -55,15 +55,15 @@
    ```
    在本地创建挂载的目录
    
-        mkdir /sharedisk
+   mkdir /sharedisk
    
-        mount -t nfs 192.168.0.10:/sharedisk  /sharedisk
+   mount -t nfs 192.168.0.10:/sharedisk  /sharedisk
    
-        #将服务器192.168.0.10上的/sharedisk/ 路径挂载到本地
+   #将服务器192.168.0.10上的/sharedisk/ 路径挂载到本地
    
    此时，如果服务器端的防火墙有开着的话，将会提示错误，如：
    
-        mount: mount to NFS server '192.168.0.10' failed: System Error: No route to host.
+   mount: mount to NFS server '192.168.0.10' failed: System Error: No route to host.
    
    我在挂载的时候就被卡在这里了，主要是对防火墙的设置不太熟悉，在网上找了一些文档按照说明做了下还是不行
    
@@ -77,13 +77,35 @@
    先把这3个服务的端口设置成固定的。
    ```
 
-5. 查看当前这5个服务的端口并记录下来 用rpcinfo -p 这里显示 nfs  2049, portmapper  111, 将剩下的三个服务的端口随便选择一个记录下来 mountd  976 rquotad  966 nlockmgr  33993 
+5. 查看当前这5个服务的端口并记录下来 用rpcinfo -p 
+
+   这里显示 nfs  2049, portmapper  111, 将剩下的三个服务的端口随便选择一个记录下来
+
+    mountd  976 
+
+   rquotad  966 
+
+   nlockmgr  33993 
 
 6. 将这3个服务的端口设置为固定端口     
 
     vim  /etc/services      
 
-   在文件的最后一行添加：      mountd  976/tcp      mountd  976/udp      rquotad  966/tcp      rquotad  966/udp      nlockmgr 33993/tcp      nlockmgr 33993/udp      保存并退出。 
+   在文件的最后一行添加：      
+
+   mountd  976/tcp      
+
+   mountd  976/udp      
+
+   rquotad  966/tcp     
+
+   rquotad  966/udp      
+
+   nlockmgr 33993/tcp      
+
+   nlockmgr 33993/udp      
+
+   保存并退出。 
 
 7. 重启下nfs服务。  
 
@@ -91,4 +113,29 @@
    service nfs restart
    ```
 
-8. 在防火墙中开放这5个端口      编辑iptables配置文件        vim /etc/sysconfig/iptables      添加如下行： -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 111 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 976 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 2049 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 966 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 33993 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 111 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 976 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 2049 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 966 -j ACCEPT -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 33993 -j ACCEPT 保存退出并重启iptables service iptables restart 重新执行步骤4挂载即可
+8. 在防火墙中开放这5个端口      
+
+   编辑iptables配置文件       
+
+   vim /etc/sysconfig/iptables      
+
+   添加如下行： 
+
+   ```shell
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 111 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 976 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 2049 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 966 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p tcp --dport 33993 -j ACCEPT
+   
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 111 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 976 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 2049 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 966 -j ACCEPT
+   -A RH-Firewall-1-INPUT -s 192.168.0.0/24 -m state --state NEW -p udp --dport 33993 -j ACCEPT
+   
+   ```
+
+
+
+    保存退出并重启iptables service iptables restart 重新执行步骤4挂载即可
